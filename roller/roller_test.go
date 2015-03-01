@@ -216,3 +216,42 @@ func TestRolls01(t *testing.T) {
 		}
 	}
 }
+
+func TestRolls02(t *testing.T) {
+	spec, err := Parse("2d6x100")
+	if err != nil {
+		t.Errorf("err returned: %v", err)
+	}
+
+	rolls := DoRolls(*spec)
+	if rolls.Count != 100 {
+		t.Errorf("Got %d rolls back instead of 100", rolls.Count)
+	}
+	if len(rolls.Rolls) != rolls.Count {
+		t.Errorf("Mismatch between Count (%d) and len(%d)", rolls.Count, len(rolls.Rolls))
+	}
+
+	for testEachSet := 0; testEachSet < rolls.Count; testEachSet++ {
+		eachSet := rolls.Rolls[testEachSet]
+		if eachSet.Count != 2 {
+			t.Errorf("Set had Count of %d instead of 2", eachSet.Count)
+		}
+		if eachSet.Count != len(eachSet.Dies) {
+			t.Errorf("Mismatch between Count (%d) and len(%d) in a set result", eachSet.Count, len(eachSet.Dies))
+		}
+		dieTotals := 0
+		for eachDie := 0; eachDie < eachSet.Count; eachDie++ {
+			dieRolled := eachSet.Dies[eachDie]
+			if dieRolled < 1 || dieRolled > int(spec.Sides) {
+				t.Errorf("Got value %d on a d%d", dieRolled, spec.Sides)
+			}
+			dieTotals += dieRolled
+		}
+		if dieTotals < 2 || dieTotals > 12 {
+			t.Errorf("Got out-of-range(2-12) die total of %d", dieTotals)
+		}
+		if dieTotals != eachSet.Total {
+			t.Errorf("Calculated die total %d did not match returned value %d", dieTotals, eachSet.Total)
+		}
+	}
+}
