@@ -1,0 +1,36 @@
+{.parent html/base.html}
+{.block page_title}About and HOWTO{.end}
+<h1>DieRolSaaS</h1>
+<h2>About and HOWTO</h2>
+<p>
+DieRolSaaS is a service that provides randomly-generated numbers. The numbers
+to be generated are specified in a format common to fantasy role-playing
+games: d6, 2d6, 1d4+1, etc.
+</p>
+<p>
+A novel addition to the classic format is the times specifier. To request that
+the given set of die rolls be reformed repeatedly, simply append an 'x' followed
+by the number of times to perform the rolls. For example: 3d6x6 would roll 3d6
+6 times.
+</p>
+<p>
+The rolls are returned in a simple JSON format. Here is a sample return for a
+roll of 2d6+1x10:
+
+<pre>
+\{"count":10,
+	"rolls":[
+		{"total":7,"count":2,"dies":[4,2]},
+		{"total":7,"count":2,"dies":[4,2]},
+		{"total":4,"count":2,"dies":[1,2]},
+		{"total":8,"count":2,"dies":[2,5]},
+		{"total":5,"count":2,"dies":[1,3]},
+		{"total":5,"count":2,"dies":[2,2]},
+		{"total":5,"count":2,"dies":[2,2]},
+		{"total":9,"count":2,"dies":[2,6]},
+		{"total":11,"count":2,"dies":[4,6]},
+		{"total":9,"count":2,"dies":[4,4]}
+	]
+}
+</pre>
+</p>
