@@ -29,6 +29,7 @@ func roll(spec RollSpec) SetResult {
 		result.Count++
 		result.Dies = append(result.Dies, die)
 	}
+	result.Total += int(spec.Modifier)
 
 	return result
 }
