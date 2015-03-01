@@ -3,15 +3,14 @@ package roller
 
 import (
 	"fmt"
-	"regexp"
 	"strconv"
 )
 
 type RollSpec struct {
-	Sides    uint64
-	DieCount uint64
+	Sides    int64
+	DieCount int64
 	Modifier int64
-	Times    uint64
+	Times    int64
 }
 
 type SetResult struct {
@@ -24,59 +23,192 @@ type RollResults struct {
 	Rolls []SetResult `json:"rolls"`
 }
 
-var dieRollExp = regexp.MustCompile(`(?P<count>\d)?d(?P<sides>\d+)(?P<modifier>[\+\-]\d+)?(?P<times>x*\d+)?`)
-var dieRollGroupNames = dieRollExp.SubexpNames()
+const (
+	TOKEN_NUM = iota
+	TOKEN_D
+	TOKEN_X
+	TOKEN_PLUS
+	TOKEN_MINUS
+	TOKEN_END
+	TOKEN_INVALID
+)
 
-func Parse(request string) (*RollSpec, error) {
+type token int
+
+const (
+	PARSE_BEGIN = iota
+	PARSE_COMPLETE
+	PARSE_CONTINUE
+	PARSE_INVALID
+)
+
+type state int
+
+type parseData struct {
+	request  string
+	curPos   int
+	curState state
+}
+
+func charToToken(char string) token {
+	var aToken token = TOKEN_INVALID
+
+	if len(char) != 1 {
+		fmt.Printf("Error: char has length of %d", len(char))
+		return aToken
+	}
+
+	isNumeric := false
+	if _, err := strconv.Atoi(char); err == nil {
+		isNumeric = true
+	}
+
+	switch {
+	case char == "+":
+		aToken = TOKEN_PLUS
+	case char == "-":
+		aToken = TOKEN_MINUS
+	case char == "d":
+		aToken = TOKEN_D
+	case char == "x":
+		aToken = TOKEN_X
+	case isNumeric:
+		aToken = TOKEN_NUM
+	}
+
+	return aToken
+}
+
+func (this *parseData) takeToken() token {
+	var curToken token = TOKEN_INVALID
+
+	if this.curPos < len(this.request) {
+		curToken = charToToken(this.request[this.curPos : this.curPos+1])
+		this.curPos += 1
+	} else {
+		curToken = TOKEN_END
+	}
+
+	return curToken
+}
+
+func (this *parseData) rewind() {
+	this.curPos -= 1
+}
+
+func (this parseData) peekToken() token {
+	var nextToken token = TOKEN_INVALID
+
+	if this.curPos+1 <= len(this.request) {
+		nextToken = charToToken(this.request[this.curPos : this.curPos+1])
+	} else {
+		nextToken = TOKEN_END
+	}
+
+	return nextToken
+}
+
+func (this parseData) peekNextToken(index int) token {
+	var nextToken token = TOKEN_INVALID
+
+	if this.curPos+index < len(this.request) {
+		nextToken = charToToken(this.request[this.curPos+index : this.curPos+index+1])
+	} else {
+		nextToken = TOKEN_END
+	}
+
+	return nextToken
+}
+
+func (this *parseData) takeNum() int64 {
+	numCount := 0
+	for this.peekNextToken(numCount) == TOKEN_NUM {
+		numCount += 1
+	}
+
+	foundNumString := this.request[this.curPos : this.curPos+numCount]
+
+	foundNum, _ := strconv.ParseInt(foundNumString, 10, 64)
+	this.curPos += numCount
+
+	return foundNum
+}
+
+func Parse(request string) (spec *RollSpec, err error) {
 	var parsed RollSpec
 	parsed.DieCount = 1
 	parsed.Times = 1
 
-	match := dieRollExp.FindAllStringSubmatch(request, 4)
-	named_matches = map[string]string{}
-	if match != nil && len(match) >= 1 {
-		var convErr error
+	var data parseData
+	data.request = request
+	data.curPos = 0
+	data.curState = PARSE_BEGIN
 
-		if match[1][0] != "" { // sides
-			parsed.Sides, convErr = strconv.ParseUint(match[1][0], 10, 64)
-			if convErr != nil {
-				return nil, fmt.Errorf("Error while parsing sides value: %v", convErr)
+	for data.curState != PARSE_COMPLETE && data.curState != PARSE_INVALID {
+		switch {
+		case data.curState == PARSE_BEGIN:
+			curToken := data.takeToken()
+			switch {
+			case curToken == TOKEN_NUM:
+				data.rewind()
+				parsed.DieCount = data.takeNum()
+				if data.peekToken() != TOKEN_D {
+					spec = nil
+					err = fmt.Errorf("When a die count is provided, the character d must follow the count number.")
+					return
+				}
+				data.curState = PARSE_CONTINUE
+			case curToken == TOKEN_D:
+				if data.peekToken() != TOKEN_NUM {
+					spec = nil
+					err = fmt.Errorf("A number must always follow the character d.")
+					return
+				}
+				parsed.Sides = data.takeNum()
+				data.curState = PARSE_CONTINUE
+			default:
+				spec = nil
+				err = fmt.Errorf("Unsupported format: %s", request)
 			}
-		} else {
-			return nil, fmt.Errorf("Request must include number of sides")
-		}
+		case data.curState == PARSE_CONTINUE:
+			curToken := data.takeToken()
+			switch {
+			case curToken == TOKEN_D:
+				if data.peekToken() != TOKEN_NUM {
+					spec = nil
+					err = fmt.Errorf("A number must always follow the character d.")
+					return
+				}
+				parsed.Sides = data.takeNum()
+				data.curState = PARSE_CONTINUE
+			case curToken == TOKEN_PLUS || curToken == TOKEN_MINUS:
+				if data.peekToken() != TOKEN_NUM {
+					spec = nil
+					err = fmt.Errorf("Plus or minus must always be followed by a number.")
+					return
+				}
+				isPlus := curToken == TOKEN_PLUS
+				modQuant := data.takeNum()
+				if !isPlus {
+					modQuant = modQuant * -1
+				}
+				parsed.Modifier = modQuant
+			case curToken == TOKEN_X:
+				if data.peekToken() != TOKEN_NUM {
+					spec = nil
+					err = fmt.Errorf("x must always be followed by a number.")
+					return
+				}
+				parsed.Times = data.takeNum()
+			case curToken == TOKEN_END:
+				data.curState = PARSE_COMPLETE
+			}
+		default:
 
-		if match[0][0] != "" {
-			parsed.DieCount, convErr = strconv.ParseUint(match[0][0], 10, 64)
-			if convErr != nil {
-				return nil, fmt.Errorf("Error while parsing die count value: %v", convErr)
-			}
 		}
-
-		if match[3][0] != "" {
-			parsed.Times, convErr = strconv.ParseUint(match[3][0], 10, 64)
-			if convErr != nil {
-				return nil, fmt.Errorf("Error while parsing times value: %v", convErr)
-			}
-		}
-
-		if match[2][0] != "" {
-			mod := match[2][0]
-			isPlus := false
-			if mod[0] == '-' {
-				isPlus = false
-			}
-			parsed.Modifier, convErr = strconv.ParseInt(mod[1:], 10, 64)
-			if convErr != nil {
-				return nil, fmt.Errorf("Error while parsing modifier value: %v", convErr)
-			}
-			if !isPlus {
-				parsed.Modifier = parsed.Modifier * -1
-			}
-		}
-	} else {
-		return nil, fmt.Errorf("Incorrect format")
 	}
 
-	return &parsed, nil
+	spec = &parsed
+	err = nil
+	return
 }
