@@ -1,6 +1,10 @@
 // roller
 package roller
 
+import (
+	"encoding/json"
+)
+
 type RollSpec struct {
 	Sides    int64
 	DieCount int64
@@ -17,4 +21,9 @@ type SetResult struct {
 type RollResults struct {
 	Count int         `json:"count"`
 	Rolls []SetResult `json:"rolls"`
+}
+
+func (results RollResults) ToJSON() []byte {
+	coded, _ := json.Marshal(results)
+	return coded
 }
