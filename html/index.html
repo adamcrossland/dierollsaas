@@ -1,7 +1,7 @@
 {.parent html/base.html}
 {.block page_title}About and HOWTO{.end}
 <h1>DieRolSaaS</h1>
-<h2>About and HOWTO</h2>
+<h2>About</h2>
 <p>
 DieRolSaaS is a service that provides randomly-generated numbers. The numbers
 to be generated are specified in a format common to fantasy role-playing
@@ -13,6 +13,12 @@ the given set of die rolls be reformed repeatedly, simply append an 'x' followed
 by the number of times to perform the rolls. For example: 3d6x6 would roll 3d6
 6 times.
 </p>
+<h2>HOWTO</h2>
+<p>To make a roll, just make a GET request to http://dierolsaas.adamcrossland.net/roll/spec 
+where spec is the die roll that you want, like this:
+<pre>
+http://dierolsaas.adamcrossland.net/roll/2d6+1x10
+</pre>
 <p>
 The rolls are returned in a simple JSON format. Here is a sample return for a
 roll of 2d6+1x10:
