@@ -194,3 +194,25 @@ func TestParse10(t *testing.T) {
 		t.Errorf("Got %d times instead of 1", result.Times)
 	}
 }
+
+func TestRolls01(t *testing.T) {
+	spec, err := Parse("d6x100")
+	if err != nil {
+		t.Errorf("err returned: %v", err)
+	}
+
+	rolls := DoRolls(*spec)
+	if rolls.Count != 100 {
+		t.Errorf("Got %d rolls back instead of 100", rolls.Count)
+	}
+	if len(rolls.Rolls) != rolls.Count {
+		t.Errorf("Mismatch between Count (%d) and len(%d)", rolls.Count, len(rolls.Rolls))
+	}
+
+	for testEach := 0; testEach < rolls.Count; testEach++ {
+		dieRolled := rolls.Rolls[testEach].Dies[0]
+		if dieRolled < 1 || dieRolled > int(spec.Sides) {
+			t.Errorf("Got value %d on a d%d", dieRolled, spec.Sides)
+		}
+	}
+}
