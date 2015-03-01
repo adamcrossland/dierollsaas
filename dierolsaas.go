@@ -2,6 +2,7 @@
 package main
 
 import (
+	"fmt"
 	"gorilla/mux"
 	"net/http"
 	"roller"
@@ -19,16 +20,20 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func RollHandler(w http.ResponseWriter, r *http.Request) {
-	//c := NewContext(r)
 	vars := mux.Vars(r)
 	rollRequest := vars["roll"]
 	if len(rollRequest) == 0 {
-		// handle error message
+		w.WriteHeader(400)
+		fmt.Fprintf(w, "Missing roll specification")
+		return
 	}
 	spec, specErr := roller.Parse(rollRequest)
 	if specErr != nil {
-		// handle error message
+		w.WriteHeader(400)
+		fmt.Fprintf(w, "Roll specification in incorrect format")
+		return
 	}
 	results := roller.DoRolls(*spec)
+	w.Header().Set("Content-Type", "application/json")
 	w.Write(results.ToJSON())
 }
