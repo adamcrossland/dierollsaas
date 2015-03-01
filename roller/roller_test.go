@@ -255,3 +255,10 @@ func TestRolls02(t *testing.T) {
 		}
 	}
 }
+
+func TestBadParse01(t *testing.T) {
+	_, err := Parse("dfhjsdjh")
+	if err == nil {
+		t.Errorf("Bad spec format should have failed", err)
+	}
+}
