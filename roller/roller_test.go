@@ -156,3 +156,41 @@ func TestParse08(t *testing.T) {
 		t.Errorf("Got %d times instead of 8", result.Times)
 	}
 }
+
+func TestParse09(t *testing.T) {
+	result, err := Parse("1d100")
+	if err != nil {
+		t.Errorf("err returned: %v", err)
+	}
+	if result.Sides != 100 {
+		t.Errorf("Got %d sides instead of 100", result.Sides)
+	}
+	if result.DieCount != 1 {
+		t.Errorf("Got %d count instead of 1", result.DieCount)
+	}
+	if result.Modifier != 0 {
+		t.Errorf("Got modifier %d instead of 0", result.Modifier)
+	}
+	if result.Times != 1 {
+		t.Errorf("Got %d times instead of 1", result.Times)
+	}
+}
+
+func TestParse10(t *testing.T) {
+	result, err := Parse("20d100")
+	if err != nil {
+		t.Errorf("err returned: %v", err)
+	}
+	if result.Sides != 100 {
+		t.Errorf("Got %d sides instead of 100", result.Sides)
+	}
+	if result.DieCount != 20 {
+		t.Errorf("Got %d count instead of 20", result.DieCount)
+	}
+	if result.Modifier != 0 {
+		t.Errorf("Got modifier %d instead of 0", result.Modifier)
+	}
+	if result.Times != 1 {
+		t.Errorf("Got %d times instead of 1", result.Times)
+	}
+}
