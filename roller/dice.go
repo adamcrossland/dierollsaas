@@ -26,6 +26,7 @@ func roll(spec RollSpec) SetResult {
 	for eachDie = 0; eachDie < spec.DieCount; eachDie++ {
 		die := rand.Intn(sidesInt) + 1
 		result.Total += die
+		result.Count++
 		result.Dies = append(result.Dies, die)
 	}
 

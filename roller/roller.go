@@ -10,6 +10,7 @@ type RollSpec struct {
 
 type SetResult struct {
 	Total int   `json:"total"`
+	Count int   `json:"count"`
 	Dies  []int `json:"dies"`
 }
 
