@@ -5,16 +5,50 @@
 <p>
 DieRolSaaS is a service that provides randomly-generated numbers. The numbers
 to be generated are specified in a format common to fantasy role-playing
-games: d6, 2d6, 1d4+1, etc.
+games: d6, 2d6, 1d4+1, and so on.
+</p>
+<p>
+Specifically, <span class="highlight">d</span> is followed by a number that
+nominally represents the number
+of sides on the die to be rolled; d6 would be a familiar, six-sided cube. While
+fantasy role-playing games commonly use d4, d6, d8, d10, d12 and d20, this 
+service will allow dice to have any number of sides. While a d31 would make for
+a very strangely-shaped die, DieRolSaaS is perfectly happy to roll one for you.
+</p>
+<p>
+The optional number that precedes the <span class="highlight">d</span>
+(like 2d6) tells the number of dice to throw. A roll of 2d6 means two
+six-sided dice.
+</p>
+<p>
+The number that results from adding together the values of all of the rolled
+dice can be modified up or down by any number by appending a plus or minus.
+For example, 2d8+1 means roll two eight-sided dice, add the two number together
+and add one, resulting in a value between 3 and 17. Or, you might want 2d4-1
+which means roll two four-sided dice and
+subtract one, giving a range of values from 1 to 7.
 </p>
 <p>
 A novel addition to the classic format is the times specifier. To request that
-the given set of die rolls be reformed repeatedly, simply append an 'x' followed
-by the number of times to perform the rolls. For example: 3d6x6 would roll 3d6
-6 times.
+the given set of rolls be performed repeatedly, simply append an
+<span class="highlight">x</span> followed
+by the number of times. For example: 3d6x6 would roll 3d6 6 times.
+</p>
+<p>
+This service is written in
+<a target='_blank' href='http://golang.org'>Go</a> and runs on
+<a target='_blank' href='https://cloud.google.com/appengine/docs'>Google AppEngine.</a>
+</p>
+<p>
+The author is <a href='mailto:adam@adamcrossland.net'>Adam Crossland</a>. Please
+feel free to contact him with any questions or suggestions. If you find any bugs
+or have a feature that you'd like to request, visit the
+<a target='_blank' href='https://bitbucket.org/adamcrossland/dierolsaas/issues'>issue tracker.</a>
 </p>
 <h2>HOWTO</h2>
-<p>To make a roll, just make a GET request to http://dierolsaas.adamcrossland.net/roll/spec 
+<p>To make a roll, just make a <span class="highlight">GET</span> request to
+<pre>http://rolldice.adamcrossland.net/roll/spec</pre> or 
+<pre>http://dierolsaas.appspot.com/roll/spec</pre>
 where spec is the die roll that you want, like this:
 <pre>
 http://rolldice.adamcrossland.net/roll/2d6+1x10
