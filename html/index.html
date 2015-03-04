@@ -23,7 +23,7 @@ six-sided dice.
 <p>
 The number that results from adding together the values of all of the rolled
 dice can be modified up or down by any number by appending a plus or minus.
-For example, 2d8+1 means roll two eight-sided dice, add the two number together
+For example, 2d8+1 means roll two eight-sided dice, add the two numbers together
 and add one, resulting in a value between 3 and 17. Or, you might want 2d4-1
 which means roll two four-sided dice and
 subtract one, giving a range of values from 1 to 7.
@@ -49,13 +49,14 @@ or have a feature that you'd like to request, visit the
 <p>To make a roll, just make a <span class="highlight">GET</span> request to
 <pre>http://rolldice.adamcrossland.net/roll/spec</pre> or 
 <pre>http://dierolsaas.appspot.com/roll/spec</pre>
-where spec is the die roll that you want, like this:
+where <span class="highlight">spec</span> is the die roll that you want, like this:
 <pre>
 http://rolldice.adamcrossland.net/roll/2d6+1x10
 </pre>
 <p>
-The rolls are returned in a simple JSON format. Here is a sample return for a
-roll of 2d6+1x10:
+The rolls are returned in a simple
+<a target='_blank' href='http://www.json.org/'>JSON</a> format. Here is a
+sample return for a roll of 2d6+1x10:
 
 <pre>
 \{"count":10,
