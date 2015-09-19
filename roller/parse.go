@@ -51,9 +51,9 @@ func charToToken(char string) token {
 		aToken = TOKEN_PLUS
 	case char == "-":
 		aToken = TOKEN_MINUS
-	case char == "d":
+	case char == "d" || char == "D":
 		aToken = TOKEN_D
-	case char == "x":
+	case char == "x" || char =="X":
 		aToken = TOKEN_X
 	case isNumeric:
 		aToken = TOKEN_NUM
