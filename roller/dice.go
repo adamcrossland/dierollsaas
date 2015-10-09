@@ -25,10 +25,25 @@ func roll(spec RollSpec) SetResult {
 	var sidesInt int = int(spec.Sides)
 	for eachDie = 0; eachDie < spec.DieCount; eachDie++ {
 		die := rand.Intn(sidesInt) + 1
-		result.Total += die
 		result.Count++
-		result.Dies = append(result.Dies, die)
+		if len(result.Dies) == 0 || die >= result.Dies[0] {
+			result.Dies = append(result.Dies, die)
+		} else {
+			// We always want to have the smallest value at the
+			// zero index
+			result.Dies = append([]int{die}, result.Dies...)
+		}
 	}
+	
+	// Calculate the total, accounting for best-of modifiers
+	var countIdx int64 = 0
+	if spec.BestOf > 0 {
+		countIdx = spec.DieCount - spec.BestOf
+	}
+	for ;countIdx < spec.DieCount; countIdx++ {
+		result.Total += result.Dies[countIdx]
+	}
+	
 	result.Total += int(spec.Modifier)
 
 	return result

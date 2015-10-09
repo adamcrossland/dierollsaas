@@ -32,7 +32,7 @@ func RollHandler(w http.ResponseWriter, r *http.Request) {
 	spec, specErr := roller.Parse(rollRequest)
 	if specErr != nil {
 		w.WriteHeader(400)
-		fmt.Fprintf(w, "Roll specification in incorrect format")
+		fmt.Fprintf(w, "Roll specification in incorrect format: %s", specErr)
 		return
 	}
 	results := roller.DoRolls(*spec)

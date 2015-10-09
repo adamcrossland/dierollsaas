@@ -7,6 +7,7 @@ import (
 
 type RollSpec struct {
 	Sides    int64
+	BestOf	 int64
 	DieCount int64
 	Modifier int64
 	Times    int64

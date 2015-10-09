@@ -13,6 +13,7 @@ const (
 	TOKEN_PLUS
 	TOKEN_MINUS
 	TOKEN_END
+	TOKEN_BESTOF
 	TOKEN_INVALID
 )
 
@@ -55,6 +56,8 @@ func charToToken(char string) token {
 		aToken = TOKEN_D
 	case char == "x" || char =="X":
 		aToken = TOKEN_X
+	case char == ",":
+		aToken = TOKEN_BESTOF
 	case isNumeric:
 		aToken = TOKEN_NUM
 	}
@@ -134,13 +137,31 @@ func Parse(request string) (spec *RollSpec, err error) {
 			switch {
 			case curToken == TOKEN_NUM:
 				data.rewind()
-				parsed.DieCount = data.takeNum()
-				if data.peekToken() != TOKEN_D {
+				
+				nextToken := data.peekNextToken(1)
+
+				if nextToken == TOKEN_D {
+					parsed.DieCount = data.takeNum()
+					if parsed.BestOf >= parsed.DieCount {
+						spec = nil
+						err = fmt.Errorf("The best-of value must be smaller than the dice count.")
+						return
+					}
+					data.curState = PARSE_CONTINUE
+				} else if nextToken == TOKEN_BESTOF {
+					if data.peekNextToken(2) == TOKEN_NUM {
+						parsed.BestOf = data.takeNum()
+						data.takeToken()
+					} else {
+						spec = nil
+						err = fmt.Errorf("When a best-of number is provided, a number must be present after the ,.")
+						return
+					}
+				} else {
 					spec = nil
-					err = fmt.Errorf("When a die count is provided, the character d must follow the count number.")
-					return
+					err = fmt.Errorf("When a die count is provided, either the character d must follow the count number or the character , must be present to indicate a best-of number.")
+					return					
 				}
-				data.curState = PARSE_CONTINUE
 			case curToken == TOKEN_D:
 				if data.peekToken() != TOKEN_NUM {
 					spec = nil
@@ -152,6 +173,7 @@ func Parse(request string) (spec *RollSpec, err error) {
 			default:
 				spec = nil
 				err = fmt.Errorf("Unsupported format: %s", request)
+				return
 			}
 		case data.curState == PARSE_CONTINUE:
 			curToken := data.takeToken()
@@ -183,6 +205,10 @@ func Parse(request string) (spec *RollSpec, err error) {
 					return
 				}
 				parsed.Times = data.takeNum()
+			case curToken == TOKEN_BESTOF:
+				spec = nil
+				err = fmt.Errorf("The best-of character is not valid in that position.")
+				return
 			case curToken == TOKEN_END:
 				data.curState = PARSE_COMPLETE
 			}

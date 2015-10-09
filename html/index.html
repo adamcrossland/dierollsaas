@@ -35,6 +35,15 @@ the given set of rolls be performed repeatedly, simply append an
 by the number of times. For example: 3d6x6 would roll 3d6 6 times.
 </p>
 <p>
+A second addition is the 'best-of' modifer. Occasionally, one will need to
+roll a certain number of dice and take only a subset of highest values. For
+example, when generating charaacter attributes in the range of 3-18, one
+might choose to roll four six-sided dice and use the highest 3 values.
+That case is accounted for like this:
+<span class="highlight">3,4d6</span>. To get an entire set of 6 attributes,
+one would use <span class="highlight">3,4d6x6</span>.
+</p>
+<p>
 This service is written in
 <a target='_blank' href='http://golang.org'>Go</a> and runs on
 <a target='_blank' href='https://cloud.google.com/appengine/docs'>Google AppEngine.</a>

@@ -195,6 +195,94 @@ func TestParse10(t *testing.T) {
 	}
 }
 
+func TestParse11(t *testing.T) {
+	result, err := Parse("3,4d6")
+	if err != nil {
+		t.Errorf("err returned: %v", err)
+	}
+	if result.Sides != 6 {
+		t.Errorf("Got %d sides instead of 6", result.Sides)
+	}
+	if result.DieCount != 4 {
+		t.Errorf("Got %d count instead of 4", result.DieCount)
+	}
+	if result.Modifier != 0 {
+		t.Errorf("Got modifier %d instead of 0", result.Modifier)
+	}
+	if result.Times != 1 {
+		t.Errorf("Got %d times instead of 1", result.Times)
+	}
+	if result.BestOf != 3 {
+		t.Errorf("Got %d best-of instead of 3", result.BestOf)
+	}
+}
+
+func TestParse12(t *testing.T) {
+	result, err := Parse("3,4d6x10")
+	if err != nil {
+		t.Errorf("err returned: %v", err)
+	}
+	if result.Sides != 6 {
+		t.Errorf("Got %d sides instead of 6", result.Sides)
+	}
+	if result.DieCount != 4 {
+		t.Errorf("Got %d count instead of 4", result.DieCount)
+	}
+	if result.Modifier != 0 {
+		t.Errorf("Got modifier %d instead of 0", result.Modifier)
+	}
+	if result.Times != 10 {
+		t.Errorf("Got %d times instead of 10", result.Times)
+	}
+	if result.BestOf != 3 {
+		t.Errorf("Got %d best-of instead of 3", result.BestOf)
+	}
+}
+
+func TestParse13(t *testing.T) {
+	result, err := Parse("3,4d6+1x10")
+	if err != nil {
+		t.Errorf("err returned: %v", err)
+	}
+	if result.Sides != 6 {
+		t.Errorf("Got %d sides instead of 6", result.Sides)
+	}
+	if result.DieCount != 4 {
+		t.Errorf("Got %d count instead of 4", result.DieCount)
+	}
+	if result.Modifier != 1 {
+		t.Errorf("Got modifier %d instead of 1", result.Modifier)
+	}
+	if result.Times != 10 {
+		t.Errorf("Got %d times instead of 10", result.Times)
+	}
+	if result.BestOf != 3 {
+		t.Errorf("Got %d best-of instead of 3", result.BestOf)
+	}
+}
+
+func TestParse14(t *testing.T) {
+	result, err := Parse("3,4D6+1X10")
+	if err != nil {
+		t.Errorf("err returned: %v", err)
+	}
+	if result.Sides != 6 {
+		t.Errorf("Got %d sides instead of 6", result.Sides)
+	}
+	if result.DieCount != 4 {
+		t.Errorf("Got %d count instead of 4", result.DieCount)
+	}
+	if result.Modifier != 1 {
+		t.Errorf("Got modifier %d instead of 1", result.Modifier)
+	}
+	if result.Times != 10 {
+		t.Errorf("Got %d times instead of 10", result.Times)
+	}
+	if result.BestOf != 3 {
+		t.Errorf("Got %d best-of instead of 3", result.BestOf)
+	}
+}
+
 func TestRolls01(t *testing.T) {
 	spec, err := Parse("d6x100")
 	if err != nil {
@@ -258,6 +346,37 @@ func TestRolls02(t *testing.T) {
 
 func TestBadParse01(t *testing.T) {
 	_, err := Parse("dfhjsdjh")
+	if err == nil {
+		t.Errorf("Bad spec format should have failed", err)
+	}
+}
+
+func TestBadParse02(t *testing.T) {
+	// Can't have a best-of modifier with a number of dice
+	_, err := Parse("3,d6")
+	if err == nil {
+		t.Errorf("Bad spec format should have failed", err)
+	}
+}
+
+func TestBadParse03(t *testing.T) {
+	// Can't have a best-of slash without a number in front of it.
+	_, err := Parse(",4d6")
+	if err == nil {
+		t.Errorf("Bad spec format should have failed", err)
+	}
+}
+
+func TestBadParse04(t *testing.T) {
+	_, err := Parse("1,2d,3")
+	if err == nil {
+		t.Errorf("Bad spec format should have failed", err)
+	}
+}
+
+func TestBadParse05(t *testing.T) {
+	// The best-of modifier must be smaller than the number of dice
+	_, err := Parse("4,3d6")
 	if err == nil {
 		t.Errorf("Bad spec format should have failed", err)
 	}
