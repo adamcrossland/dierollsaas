@@ -1,13 +1,11 @@
 // roller
 package roller
 
-import (
-	"encoding/json"
-)
+import "encoding/json"
 
 type RollSpec struct {
 	Sides    int64
-	BestOf	 int64
+	BestOf   int64
 	DieCount int64
 	Modifier int64
 	Times    int64
