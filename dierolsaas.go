@@ -2,7 +2,6 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
 	"net/http"
 
@@ -45,25 +44,8 @@ func RollHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.URL.RawQuery {
 	case "slack":
 	case "text":
-		var buf bytes.Buffer
-		for er := 0; er < results.Count; er++ {
-			if er > 0 {
-				buf.WriteString("; ")
-			}
-			buf.WriteString(fmt.Sprintf("%d", results.Rolls[er].Total))
-			if results.Rolls[er].Count > 1 {
-				for ed := 0; ed < results.Rolls[er].Count; ed++ {
-					if ed == 0 {
-						buf.WriteString(": ")
-					} else {
-						buf.WriteString(" ")
-					}
-					buf.WriteString(fmt.Sprintf("[%d]", results.Rolls[er].Dies[ed]))
-				}
-			}
-		}
 		w.Header().Set("Content-Type", "text/plain")
-		w.Write(buf.Bytes())
+		w.Write(results.ToText())
 	default:
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(results.ToJSON())
