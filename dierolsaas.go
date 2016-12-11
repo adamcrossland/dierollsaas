@@ -2,11 +2,14 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
-	"gorilla/mux"
-	"mtemplate"
 	"net/http"
+
 	"roller"
+
+	"bitbucket.org/adamcrossland/mtemplate"
+	"github.com/gorilla/mux"
 )
 
 func init() {
@@ -22,6 +25,8 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func RollHandler(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+
 	vars := mux.Vars(r)
 	rollRequest := vars["roll"]
 	if len(rollRequest) == 0 {
@@ -36,6 +41,31 @@ func RollHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	results := roller.DoRolls(*spec)
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(results.ToJSON())
+
+	switch r.URL.RawQuery {
+	case "slack":
+	case "text":
+		var buf bytes.Buffer
+		for er := 0; er < results.Count; er++ {
+			if er > 0 {
+				buf.WriteString("; ")
+			}
+			buf.WriteString(fmt.Sprintf("%d", results.Rolls[er].Total))
+			if results.Rolls[er].Count > 1 {
+				for ed := 0; ed < results.Rolls[er].Count; ed++ {
+					if ed == 0 {
+						buf.WriteString(": ")
+					} else {
+						buf.WriteString(" ")
+					}
+					buf.WriteString(fmt.Sprintf("[%d]", results.Rolls[er].Dies[ed]))
+				}
+			}
+		}
+		w.Header().Set("Content-Type", "text/plain")
+		w.Write(buf.Bytes())
+	default:
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(results.ToJSON())
+	}
 }
