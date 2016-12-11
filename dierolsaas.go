@@ -46,6 +46,8 @@ func RollHandler(w http.ResponseWriter, r *http.Request) {
 	case "text":
 		w.Header().Set("Content-Type", "text/plain")
 		w.Write(results.ToText())
+	case "json":
+		fallthrough
 	default:
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(results.ToJSON())
