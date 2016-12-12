@@ -16,6 +16,7 @@ func init() {
 	r.HandleFunc("/", IndexHandler)
 	r.HandleFunc("/index", IndexHandler)
 	r.HandleFunc("/roll/{roll}", RollHandler)
+	r.HandleFunc("/slack/roll", SlackHandler)
 	http.Handle("/", r)
 }
 
@@ -51,5 +52,24 @@ func RollHandler(w http.ResponseWriter, r *http.Request) {
 	default:
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(results.ToJSON())
+	}
+
+	const slack_token := "IbAZE0ckwoSNJcsGWE7sqX5j"
+
+	func SlackHandler(w http.ResponseWriter, r *http.Request) {
+		r.ParseForm();
+
+		var foundToken := r.FormValue("token")
+
+		// Make sure that this is a legit request from Slack
+		if foundToken == slack_token {
+
+		} if foundToken == "" {
+			w.WriteHeader(400);
+			fmt.Fprintf(w, "Missing token")
+		} else {
+			w.WriteHeader(400);
+			fmt.Fprintf(w, "Invalid token")
+		}
 	}
 }
