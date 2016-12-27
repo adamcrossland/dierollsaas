@@ -17,7 +17,7 @@ func init() {
 	r.HandleFunc("/", indexHandler)
 	r.HandleFunc("/index", indexHandler)
 	r.HandleFunc("/roll/{roll}", rollHandler)
-	r.HandleFunc("/slack/roll/{roll}", slackHandler)
+	r.HandleFunc("/slack/roll", slackHandler)
 	http.Handle("/", r)
 }
 
@@ -25,9 +25,7 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 	mtemplate.RenderFile("html/index.html", w, nil)
 }
 
-func doRollRequest(w http.ResponseWriter, r *http.Request) (*roller.RollResults, bool) {
-	vars := mux.Vars(r)
-	rollRequest := vars["roll"]
+func doRollRequest(w http.ResponseWriter, r *http.Request, rollRequest string) (*roller.RollResults, bool) {
 	if len(rollRequest) == 0 {
 		w.WriteHeader(400)
 		fmt.Fprintf(w, "Missing roll specification")
@@ -47,8 +45,10 @@ func doRollRequest(w http.ResponseWriter, r *http.Request) (*roller.RollResults,
 
 func rollHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
+	vars := mux.Vars(r)
+	rollRequest := vars["roll"]
 
-	results, ok := doRollRequest(w, r)
+	results, ok := doRollRequest(w, r, rollRequest)
 
 	switch r.URL.RawQuery {
 	case "text":
@@ -83,7 +83,8 @@ func slackHandler(w http.ResponseWriter, r *http.Request) {
 		// Make sure that we have a repsonse url to which to write
 		respondTo := r.PostFormValue("response_url")
 		if respondTo != "" {
-			results, ok := doRollRequest(w, r)
+			rollRequest := r.PostFormValue("text")
+			results, ok := doRollRequest(w, r, rollRequest)
 			var slack slackResponse
 			if ok {
 				slack.Text = results.String()
