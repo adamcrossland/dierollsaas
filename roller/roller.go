@@ -31,12 +31,12 @@ func (results RollResults) ToJSON() []byte {
 	return coded
 }
 
-func (results RollResults) ToText() []byte {
+func (results RollResults) toBuffer() *bytes.Buffer {
 	var buf bytes.Buffer
 
 	for er := 0; er < results.Count; er++ {
 		if er > 0 {
-			buf.WriteString("; ")
+			buf.WriteString("\n")
 		}
 		buf.WriteString(fmt.Sprintf("%d", results.Rolls[er].Total))
 		if results.Rolls[er].Count > 1 {
@@ -51,5 +51,13 @@ func (results RollResults) ToText() []byte {
 		}
 	}
 
-	return buf.Bytes()
+	return &buf
+}
+
+func (results RollResults) String() string {
+	return results.toBuffer().String()
+}
+
+func (results RollResults) ToText() []byte {
+	return results.toBuffer().Bytes()
 }

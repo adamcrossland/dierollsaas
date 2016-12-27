@@ -2,6 +2,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -16,7 +17,7 @@ func init() {
 	r.HandleFunc("/", IndexHandler)
 	r.HandleFunc("/index", IndexHandler)
 	r.HandleFunc("/roll/{roll}", RollHandler)
-	r.HandleFunc("/slack/roll", SlackHandler)
+	r.HandleFunc("/slack/roll/{roll}", SlackHandler)
 	http.Handle("/", r)
 }
 
@@ -24,52 +25,82 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 	mtemplate.RenderFile("html/index.html", w, nil)
 }
 
-func RollHandler(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
-
+func doRollRequest(w http.ResponseWriter, r *http.Request) (*roller.RollResults, bool) {
 	vars := mux.Vars(r)
 	rollRequest := vars["roll"]
 	if len(rollRequest) == 0 {
 		w.WriteHeader(400)
 		fmt.Fprintf(w, "Missing roll specification")
-		return
+		return nil, false
 	}
+
 	spec, specErr := roller.Parse(rollRequest)
 	if specErr != nil {
 		w.WriteHeader(400)
 		fmt.Fprintf(w, "Roll specification in incorrect format: %s", specErr)
-		return
+		return nil, false
 	}
-	results := roller.DoRolls(*spec)
+
+	rollResult := roller.DoRolls(*spec)
+	return &rollResult, true
+}
+
+func RollHandler(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+
+	results, ok := doRollRequest(w, r)
 
 	switch r.URL.RawQuery {
-	case "slack":
 	case "text":
-		w.Header().Set("Content-Type", "text/plain")
-		w.Write(results.ToText())
+		if ok {
+			w.Header().Set("Content-Type", "text/plain")
+			w.Write(results.ToText())
+		}
 	case "json":
 		fallthrough
 	default:
 		w.Header().Set("Content-Type", "application/json")
-		w.Write(results.ToJSON())
-	}
-
-	const slack_token := "IbAZE0ckwoSNJcsGWE7sqX5j"
-
-	func SlackHandler(w http.ResponseWriter, r *http.Request) {
-		r.ParseForm();
-
-		var foundToken := r.FormValue("token")
-
-		// Make sure that this is a legit request from Slack
-		if foundToken == slack_token {
-
-		} if foundToken == "" {
-			w.WriteHeader(400);
-			fmt.Fprintf(w, "Missing token")
-		} else {
-			w.WriteHeader(400);
-			fmt.Fprintf(w, "Invalid token")
+		if ok {
+			w.Write(results.ToJSON())
 		}
+	}
+}
+
+const slack_token string = "IbAZE0ckwoSNJcsGWE7sqX5j"
+
+type slackResponse struct {
+	Text         string `json:"text"`
+	ResponseType string `json:"response_type"`
+}
+
+func SlackHandler(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+
+	foundToken := r.PostFormValue("token")
+
+	// Make sure that this is a legit request from Slack
+	if foundToken == slack_token {
+		// Make sure that we have a repsonse url to which to write
+		respondTo := r.PostFormValue("response_url")
+		if respondTo != "" {
+			results, ok := doRollRequest(w, r)
+			var slack slackResponse
+			if ok {
+				slack.Text = results.String()
+				slack.ResponseType = "in_channel"
+
+				coded, _ := json.Marshal(slack)
+				w.Write(coded)
+			}
+		} else {
+			w.WriteHeader(400)
+			fmt.Fprintf(w, "Missing responseurl")
+		}
+	} else if foundToken == "" {
+		w.WriteHeader(400)
+		fmt.Fprintf(w, "Missing token")
+	} else {
+		w.WriteHeader(400)
+		fmt.Fprintf(w, "Invalid token")
 	}
 }
